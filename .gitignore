@@ -1,0 +1,6 @@
+data/
+ck/
+ck_window2/
+__pycache__/
+*.pyc
+.DS_Store

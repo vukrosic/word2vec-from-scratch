@@ -1,0 +1,213 @@
+## get_data
+have questions-words.txt
+text8                  100,000,000 bytes
+questions-words.txt        603,955 bytes
+## step1_vectors
+word      royal  female
+man         0.1     0.1
+woman       0.1     0.9
+king        0.9     0.1
+queen       0.9     0.9
+apple       0.0     0.3
+
+cosine(king, queen) = 0.781
+cosine(king, woman) = 0.220
+cosine(king, apple) = 0.110
+
+king - man + woman = [0.9 0.9]
+nearest word: queen  (cosine 1.000)
+
+These ten numbers were typed in by hand.
+The real table needs 71,290 words x 100 numbers = 7,129,000 numbers.
+## step2_pairs
+words in the text       17,005,207
+different words            253,854
+seen 5 times or more         71,290
+words left in the text  16,718,844
+
+most common: the 1,061,396, of 593,677, and 416,629, one 411,764, in 372,201, a 325,873
+  king   row   186   seen  7,456 times
+  queen  row   902   seen  1,940 times
+  man    row   242   seen  5,778 times
+  woman  row 1,012   seen  1,753 times
+
+a piece of the text, word 120,916:
+   of navarre became king henry iv of france
+window 2 gives 26 pairs. Those with centre "king":
+   (king, became)
+   (king, henry)
+   (king, navarre)
+   (king, iv)
+
+window 5 over the whole text: 167,188,410 pairs
+
+the company each word keeps (window 5, without the 150
+most common words):
+  king   ii 410, james 295, england 255, iii 231, france 207, henry 207, son 205
+  queen  elizabeth 269, ii 193, mary 142, victoria 127, king 111, england 90, god 79
+  apple  computer 213, ii 206, macintosh 168, mac 78, os 60, games 56, software 54
+## step3_model
+real pair, label 1: the score should go up
+  start   belief 0.490
+  step 1  error -0.510  belief 0.532
+  step 2  error -0.468  belief 0.580
+  step 3  error -0.420  belief 0.661
+  step 4  error -0.339  belief 0.768
+  step 5  error -0.232  belief 0.860
+  step 6  error -0.140  belief 0.914
+fake pair, label 0: the score should go down
+  start   belief 0.546
+  step 1  error +0.546  belief 0.243
+  step 2  error +0.243  belief 0.130
+  step 3  error +0.130  belief 0.078
+  step 4  error +0.078  belief 0.053
+  step 5  error +0.053  belief 0.039
+  step 6  error +0.039  belief 0.030
+
+full size tables: (71290, 100) and (71290, 100)
+numbers to learn: 14,258,000
+belief for any pair before training: 0.500
+## step4_negative
+how often a word is drawn as a fake neighbour
+  word        share of text   share of draws
+  the             6.3485 %        1.4760 %
+  king            0.0446 %        0.0358 %
+  queen           0.0116 %        0.0131 %
+  navarre         0.0005 %        0.0012 %
+
+real pairs only: first 1,000,000 words, 11 s
+  belief in 2,000 real pairs    0.938
+  belief in 2,000 random pairs  0.936
+  belief in (king, queen)       1.000
+  belief in (king, banana)      0.888
+5 fakes per pair: first 1,000,000 words, 42 s
+  belief in 2,000 real pairs    0.284
+  belief in 2,000 random pairs  0.222
+  belief in (king, queen)       0.255
+  belief in (king, banana)      0.016
+## step5_train --show
+chance of keeping each copy of a word
+  the       4.0 %
+  of        5.3 %
+  king     47.4 %
+  queen    92.8 %
+words per pass: 16,718,844 -> about 8,430,483
+nudges per pass: about 505,828,980
+one pair at a time: 234,321 nudges a second, 6.0 hours for 10 passes
+
+pass  1  loss 2.217   78 s  real 0.209  random 0.127  king -> fealty, pepin, macbeth
+pass  2  loss 2.112   79 s  real 0.222  random 0.128  king -> plantagenet, pretender, valois
+pass  3  loss 2.097   80 s  real 0.235  random 0.134  king -> abdicates, vii, valois
+pass  4  loss 2.093  100 s  real 0.228  random 0.127  king -> abdicates, plantagenet, stadtholder
+pass  5  loss 2.095   90 s  real 0.244  random 0.133  king -> throne, plantagenet, eochaid
+pass  6  loss 2.101   85 s  real 0.242  random 0.131  king -> vii, capet, eochaid
+pass  7  loss 2.112  105 s  real 0.240  random 0.133  king -> vii, eochaid, plantagenet
+pass  8  loss 2.126   87 s  real 0.248  random 0.135  king -> fitzalan, eochaid, soissons
+pass  9  loss 2.145   86 s  real 0.255  random 0.138  king -> eochaid, fitzalan, canute
+pass 10  loss 2.172   87 s  real 0.256  random 0.138  king -> godwinson, fortinbras, eochaid
+
+## step6_look
+nearest neighbours
+  king   kings 0.74, throne 0.72, vii 0.70, son 0.69, crowned 0.68
+  paris  france 0.71, nantes 0.69, teau 0.69, montparnasse 0.68, chapelle 0.67
+  apple  macintosh 0.87, iigs 0.75, amiga 0.74, microsoft 0.72, imac 0.71
+  car    cars 0.83, driver 0.77, racing 0.74, motorcycle 0.73, automobile 0.72
+  six    four 0.98, five 0.97, eight 0.97, three 0.96, seven 0.96
+  she    her 0.93, herself 0.84, mother 0.73, woman 0.71, wife 0.71
+  hot    cool 0.81, warm 0.69, cloudy 0.67, cold 0.65, melt 0.65
+
+word arithmetic: b - a + c
+  king - man + woman         queen 0.67, daughter 0.64, princess 0.61
+  paris - france + germany   berlin 0.80, munich 0.75, leipzig 0.74
+  paris - france + japan     tokyo 0.79, peking 0.63, kobe 0.63
+  actor - man + woman        actress 0.81, dancer 0.73, singer 0.70
+  his - he + she             her 0.95, herself 0.78, wife 0.74
+  bigger - big + small       larger 0.68, smaller 0.68, large 0.62
+  better - good + bad        worse 0.60, mediocre 0.59, downside 0.57
+  paris - france + italy     turin 0.70, bologna 0.69, venice 0.67
+
+flat map (2 numbers per word instead of 100)
+  france   -0.336 +0.393
+  paris    -0.272 +0.009
+  germany  -0.139 +0.013
+  berlin   +0.002 -0.451
+  japan    +0.437 +0.414
+  tokyo    +0.554 +0.115
+  russia   +0.114 +0.100
+  moscow   +0.223 -0.327
+  spain    -0.352 +0.469
+  madrid   -0.080 +0.080
+  italy    -0.374 +0.170
+  rome     -0.417 -0.207
+  greece   -0.271 -0.218
+  athens   -0.117 -0.554
+  china    +0.459 +0.154
+  beijing  +0.570 -0.160
+## step7_test
+section                      right  asked   score  skipped
+capital-common-countries       390    506   77.1 %       0
+capital-world                  795   1452   54.8 %    3072
+currency                        49    268   18.3 %     598
+city-in-state                  522   1571   33.2 %     896
+family                         171    306   55.9 %     200
+gram1-adjective-to-adverb      139    756   18.4 %     236
+gram2-opposite                  28    306    9.2 %     506
+gram3-comparative              637   1260   50.6 %      72
+gram4-superlative              128    506   25.3 %     616
+gram5-present-participle       200    992   20.2 %      64
+gram6-nationality-adjective   1161   1371   84.7 %     228
+gram7-past-tense               394   1332   29.6 %     228
+gram8-plural                   574    992   57.9 %     340
+gram9-plural-verbs             183    650   28.2 %     220
+total                         5371  12268   43.8 %    7276
+
+some wrong answers
+  greece - athens + baghdad: said arab, wanted iraq
+  greece - athens + islamabad: said qatar, wanted pakistan
+  greece - athens + london: said uk, wanted england
+  iraq - baghdad + bangkok: said allafrica, wanted thailand
+  girl - boy + brother: said wife, wanted sister
+  girl - boy + brothers: said aunt, wanted sisters
+  girl - boy + father: said wife, wanted mother
+  girl - boy + grandson: said wife, wanted granddaughter
+  unacceptable - acceptable + certain: said particular, wanted uncertain
+  unacceptable - acceptable + clear: said perceived, wanted unclear
+  unacceptable - acceptable + comfortable: said electorate, wanted uncomfortable
+  unacceptable - acceptable + consistent: said prediction, wanted inconsistent
+## solutions/window
+nearest neighbours, window 5 against window 2
+  paris     window 5: france, nantes, teau, montparnasse, chapelle
+  paris     window 2: rodin, bruges, marseille, montparnasse, bologna
+  apple     window 5: macintosh, iigs, amiga, microsoft, imac
+  apple     window 2: macintosh, iigs, iic, amiga, intel
+  war       window 5: allied, troops, civil, hostilities, fought
+  war       window 2: ww, dunkirk, civil, wwii, attrition
+  running   window 5: run, ran, runs, uphill, fork
+  running   window 2: run, ran, runs, uphill, clocked
+  einstein  window 5: relativity, electrodynamics, dinger, bose, heisenberg
+  einstein  window 2: relativity, heisenberg, gravitation, dirac, bose
+
+section                      window 5  window 2
+capital-common-countries       77.1 %    66.0 %
+capital-world                  54.8 %    41.0 %
+currency                       18.3 %    19.4 %
+city-in-state                  33.2 %    22.0 %
+family                         55.9 %    60.8 %
+gram1-adjective-to-adverb      18.4 %    13.9 %
+gram2-opposite                  9.2 %    16.0 %
+gram3-comparative              50.6 %    56.4 %
+gram4-superlative              25.3 %    32.0 %
+gram5-present-participle       20.2 %    31.9 %
+gram6-nationality-adjective    84.7 %    75.1 %
+gram7-past-tense               29.6 %    33.2 %
+gram8-plural                   57.9 %    44.4 %
+gram9-plural-verbs             28.2 %    30.3 %
+total                          43.8 %    40.5 %
+## tests
+ok  test_step1
+ok  test_step2
+ok  test_step3
+ok  test_step4
+ok  test_step5
+ok  test_trained_vectors
+all tests passed

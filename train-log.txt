@@ -1,0 +1,10 @@
+pass  1  loss 2.217   78 s  real 0.209  random 0.127  king -> fealty, pepin, macbeth
+pass  2  loss 2.112   79 s  real 0.222  random 0.128  king -> plantagenet, pretender, valois
+pass  3  loss 2.097   80 s  real 0.235  random 0.134  king -> abdicates, vii, valois
+pass  4  loss 2.093  100 s  real 0.228  random 0.127  king -> abdicates, plantagenet, stadtholder
+pass  5  loss 2.095   90 s  real 0.244  random 0.133  king -> throne, plantagenet, eochaid
+pass  6  loss 2.101   85 s  real 0.242  random 0.131  king -> vii, capet, eochaid
+pass  7  loss 2.112  105 s  real 0.240  random 0.133  king -> vii, eochaid, plantagenet
+pass  8  loss 2.126   87 s  real 0.248  random 0.135  king -> fitzalan, eochaid, soissons
+pass  9  loss 2.145   86 s  real 0.255  random 0.138  king -> eochaid, fitzalan, canute
+pass 10  loss 2.172   87 s  real 0.256  random 0.138  king -> godwinson, fortinbras, eochaid
